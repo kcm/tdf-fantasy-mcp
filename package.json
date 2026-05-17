@@ -10,9 +10,14 @@
     "prepublishOnly": "npm run build"
   },
   "bin": {
-    "tdf-fantasy-mcp": "./dist/index.js"
+    "tdf-fantasy": "dist/index.js"
   },
-  "keywords": ["mcp", "tour-de-france", "fantasy", "cycling"],
+  "keywords": [
+    "mcp",
+    "tour-de-france",
+    "fantasy",
+    "cycling"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {

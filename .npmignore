@@ -1,0 +1,16 @@
+# Source
+src/
+
+# Config & tooling
+.github/
+.nvmrc
+tsconfig.json
+.npmignore
+
+# Claude/dev docs
+CLAUDE.md
+INDEX.md
+
+# Misc
+*.log
+*.tgz
