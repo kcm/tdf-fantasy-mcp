@@ -733,11 +733,16 @@ function buildPromptText(name: string, args: Args): string {
         `I'm playing TdF Fantasy with a budget of ${budget} credits. ` +
         `My strategy is to build a team around ${desc}.\n\n` +
         `Please use the available tools to:\n` +
-        `1. Fetch the full rider list and their prices\n` +
-        `2. Fetch upcoming stage profiles to identify which stages favour this strategy\n` +
-        `3. Recommend the strongest 8-rider team within the ${budget}-credit budget that maximises points for a ${strategy} strategy\n\n` +
-        `Show each rider's name, team, price, position, and why they fit the strategy. ` +
-        `Include the total cost and remaining budget. Flag any must-have captaincy (Stage Winner Bonus) candidates.`
+        `1. Fetch the full rider list and their prices from the TdF Fantasy API\n` +
+        `2. Fetch upcoming stage profiles to identify which stages favour a ${strategy} strategy\n` +
+        `3. Identify a shortlist of 12–15 candidates that fit the ${strategy} profile within budget\n` +
+        `4. For each shortlisted rider, use the FirstCycling tools to look up their palmares and career results — ` +
+        `confirm they are a genuine ${strategy} threat with a track record of results in that terrain, ` +
+        `not just a fantasy price tag. Flag any who appear overpriced relative to their actual race history.\n` +
+        `5. From the validated shortlist, select the strongest 8-rider team within ${budget} credits\n\n` +
+        `Present the final team with: name, price, FirstCycling-verified specialty, and why they made the cut over alternatives. ` +
+        `Call out anyone whose palmares didn't justify their price. ` +
+        `Include total cost, remaining budget, and the best captaincy (Stage Winner Bonus) pick.`
       );
     }
 
@@ -750,10 +755,16 @@ function buildPromptText(name: string, args: Args): string {
       return (
         `I'm looking for the best value fantasy picks — riders${specialtyClause} priced at ${maxPrice} credits or less.\n\n` +
         `Please use the available tools to:\n` +
-        `1. Fetch all riders and their current prices and stats\n` +
+        `1. Fetch all riders and their current prices and stats from the TdF Fantasy API\n` +
         `2. Fetch upcoming stage profiles to assess how many scoring opportunities each rider has\n` +
-        `3. Rank the top value picks under ${maxPrice} credits by points-per-credit potential\n\n` +
-        `For each pick explain: price, expected stage opportunities, why they're good value, and any risks.`
+        `3. Identify a longlist of affordable candidates (≤${maxPrice} credits)${specialtyClause}\n` +
+        `4. For each candidate, use the FirstCycling tools to look up their recent results and terrain performance — ` +
+        `check for wins or podiums in the past 12 months, their best terrain type (mountain/flat/TT/cobbles), ` +
+        `and whether their current form is rising or declining. Use this to separate genuinely underpriced riders ` +
+        `from those who are cheap because they've stopped performing.\n` +
+        `5. Rank the top value picks by points-per-credit potential, weighted by FirstCycling form signals\n\n` +
+        `For each pick: price, upcoming stage opportunities, FirstCycling form summary (recent wins, terrain fit), ` +
+        `value verdict, and any risks.`
       );
     }
 
@@ -763,12 +774,15 @@ function buildPromptText(name: string, args: Args): string {
       return (
         `Design me a complete 8-rider TdF Fantasy team built entirely around a ${specialty} strategy, within a ${budget}-credit budget.\n\n` +
         `Please use the available tools to:\n` +
-        `1. Fetch all riders, their prices, and positions\n` +
+        `1. Fetch all riders, their prices, and positions from the TdF Fantasy API\n` +
         `2. Fetch the stage calendar to identify the stages that suit ${specialty} riders\n` +
-        `3. Select 8 riders that maximise ${specialty} scoring opportunities\n\n` +
-        `Present the team roster with each rider's name, price, and role in the strategy. ` +
-        `Note the total cost, remaining budget, and the key stages to target. ` +
-        `Recommend the best captaincy pick for the Stage Winner Bonus.`
+        `3. Build a longlist of ${specialty}-type candidates within budget\n` +
+        `4. For each candidate, use the FirstCycling tools to validate their ${specialty} track record — ` +
+        `look at palmares for ${specialty}-relevant race types, recent results on similar terrain, and career specialty scores. ` +
+        `Discard anyone whose FirstCycling history doesn't back up their ${specialty} label in the fantasy game.\n` +
+        `5. From the validated candidates, select the strongest 8-rider team within ${budget} credits\n\n` +
+        `Present the roster with: name, price, and a one-line FirstCycling evidence summary for why they're a ` +
+        `genuine ${specialty} specialist. Note total cost, key target stages, and the best captaincy pick.`
       );
     }
 
@@ -778,12 +792,18 @@ function buildPromptText(name: string, args: Args): string {
         `I want to go all-in on breakaway specialists — high risk, high reward. ` +
         `Build me the most aggressive breakaway-focused team possible within ${budget} credits.\n\n` +
         `Please use the available tools to:\n` +
-        `1. Fetch all riders and identify the best breakaway artists (look at position, price, and recent form)\n` +
-        `2. Fetch the stage calendar to find the stages most likely to end in a breakaway success ` +
-        `(long flat-to-rolling stages, lower mountain stages, stages before rest days)\n` +
-        `3. Pick 8 riders who maximise breakaway stage coverage across the Tour\n\n` +
-        `Show the full team, total cost, which stages each rider targets, and the expected points ceiling if breakaways go to plan. ` +
-        `Also note the downside risk and which stages might hurt this strategy.`
+        `1. Fetch all riders from the TdF Fantasy API and identify candidates listed as breakaway/polyvalent types\n` +
+        `2. Fetch the stage calendar and mark stages historically likely to end in breakaway success ` +
+        `(rolling terrain, medium mountains, stages with hard early climbs but no summit finish)\n` +
+        `3. For each breakaway candidate, use the FirstCycling tools to look up their career results and palmares — ` +
+        `count actual breakaway stage wins or long-range solo attacks in their history. ` +
+        `Prioritise riders with a proven record of going in moves and succeeding; ` +
+        `skip anyone whose FirstCycling profile shows they mostly contest bunch finishes or ride in support.\n` +
+        `4. Pick the 8 riders who best combine: FirstCycling-verified breakaway history, ` +
+        `stage-calendar coverage, and value within ${budget} credits\n\n` +
+        `Show the full team, each rider's FirstCycling breakaway credential (notable solo wins or escapes), ` +
+        `which stages they target, total cost, and the expected points ceiling. ` +
+        `Also flag the downside scenario — which stages hurt this strategy if the peloton controls the race.`
       );
     }
 
@@ -795,13 +815,20 @@ function buildPromptText(name: string, args: Args): string {
       return (
         `I have ${exchangesRemaining} transfers remaining and need to plan the next ${stagesAhead} stages.\n\n` +
         `Please use the available tools to:\n` +
-        `1. Fetch my current team\n` +
-        `2. Fetch the upcoming ${stagesAhead} stage profiles\n` +
-        `3. Fetch rider stats and top transaction data to see who's in form\n` +
-        `4. Recommend how to deploy my ${exchangesRemaining} transfers across these ${stagesAhead} stages for maximum points gain\n\n` +
-        `For each suggested transfer: who to sell, who to buy, before which stage, and why. ` +
-        `Show the projected points impact and the running budget after each move. ` +
-        `Prioritise the transfers by expected return — if I can only make some of them, tell me which matter most.`
+        `1. Fetch my current team from the TdF Fantasy API\n` +
+        `2. Fetch the upcoming ${stagesAhead} stage profiles and classify each by terrain type ` +
+        `(flat sprint, rolling breakaway, mountain summit, TT, etc.)\n` +
+        `3. Fetch rider stats and top transaction data\n` +
+        `4. For each of my current riders, use the FirstCycling tools to check their terrain-specific performance — ` +
+        `do their historical results align with the upcoming stage types? ` +
+        `Flag anyone whose FirstCycling profile suggests they'll be out of their depth in the next ${stagesAhead} stages.\n` +
+        `5. For each potential transfer target (riders I don't own), cross-reference their FirstCycling terrain specialty ` +
+        `against the upcoming stage calendar before recommending them as a buy. ` +
+        `Avoid recommending riders whose FirstCycling history doesn't support the terrain ahead.\n` +
+        `6. Recommend how to deploy my ${exchangesRemaining} transfers for maximum points gain, ` +
+        `with each swap validated by both fantasy stats and FirstCycling terrain fit\n\n` +
+        `For each suggested transfer: who to sell (with FirstCycling reason), who to buy (with FirstCycling terrain evidence), ` +
+        `before which stage, and projected points impact. Rank by expected return.`
       );
     }
 
@@ -858,39 +885,54 @@ function buildPromptText(name: string, args: Args): string {
       return (
         `Please analyse my TdF Fantasy team's current form and trajectory.\n\n` +
         `Use the available tools to:\n` +
-        `1. Fetch my team and its current total points\n` +
+        `1. Fetch my team and its current total points from the TdF Fantasy API\n` +
         `2. Fetch my stage-by-stage points progression\n` +
-        `3. Fetch recent stage results to see how each of my riders is performing\n` +
-        `4. Fetch my current league standings\n\n` +
-        `For each rider on my team: points scored so far, points per credit ratio, recent stage form, and outlook for remaining stages. ` +
-        `Summarise the team's overall health — which riders are delivering, which are disappointing, ` +
-        `and how the team's trajectory compares to my league position.`
+        `3. Fetch recent stage results to see how each of my riders is performing in the race\n` +
+        `4. Fetch my current league standings\n` +
+        `5. For each rider on my team, use the FirstCycling tools to pull their recent results (last 3–6 months) — ` +
+        `this is the key enrichment step: use FirstCycling to distinguish between a rider having a genuinely bad Tour ` +
+        `(poor form, illness, riding in support) versus a rider who is performing well in the race but just had ` +
+        `unlucky stage draws or missed a sprint. FirstCycling recent results will show whether their ` +
+        `current trajectory is consistent with their broader season form.\n\n` +
+        `For each rider: fantasy points so far, points-per-credit ratio, FirstCycling recent form summary, ` +
+        `and an honest outlook for remaining stages. ` +
+        `Separate "underperforming due to bad form" from "underperforming due to bad luck on stage draws." ` +
+        `Summarise overall team health and league trajectory.`
       );
 
     case "who_is_underperforming":
       return (
         `Which riders on my TdF Fantasy team are underperforming relative to their price tag?\n\n` +
         `Use the available tools to:\n` +
-        `1. Fetch my team and each rider's points so far\n` +
+        `1. Fetch my team and each rider's points so far from the TdF Fantasy API\n` +
         `2. Fetch rider stats and price data\n` +
-        `3. Fetch recent stage results to put points in context\n\n` +
-        `Calculate a points-per-credit ratio for each rider and benchmark it against similar-priced alternatives. ` +
-        `Flag anyone who is clearly not earning their place — underperforming relative to cost, ` +
-        `missing stages they should be competitive in, or losing value. ` +
-        `For each underperformer, suggest a like-for-like upgrade target and the credit difference.`
+        `3. Fetch recent stage results to put fantasy points in context\n` +
+        `4. For each rider who appears to be underdelivering, use the FirstCycling tools to check their ` +
+        `recent results and career pattern — look for: riders who historically fade in week 3, ` +
+        `riders currently riding as a domestique for a teammate, riders whose recent results outside the ` +
+        `Tour show declining form, and riders who are due a result based on recent near-misses. ` +
+        `This helps distinguish "sell now" from "hold, they'll come good."\n\n` +
+        `Calculate points-per-credit for each rider. For anyone flagged as underperforming: ` +
+        `FirstCycling verdict (bad form vs. bad luck vs. role change), sell recommendation (yes/hold/no), ` +
+        `and a suggested like-for-like upgrade with FirstCycling-validated upside.`
       );
 
     case "flag_injury_risks":
       return (
         `Flag any riders on my TdF Fantasy team who are at risk due to injury, illness, or fatigue.\n\n` +
         `Use the available tools to:\n` +
-        `1. Fetch my current team\n` +
-        `2. Fetch recent stage results and rider stats to spot any sudden drop-offs in performance\n` +
-        `3. Fetch the upcoming stage calendar to assess workload\n\n` +
-        `Look for signals like: dramatically falling points, non-finishes, unusually low stage rankings, ` +
-        `or riders who are GC helpers burning matches at the front. ` +
-        `Flag anyone showing these warning signs and rate the risk level (low/medium/high). ` +
-        `For high-risk riders, suggest a contingency replacement and its cost.`
+        `1. Fetch my current team from the TdF Fantasy API\n` +
+        `2. Fetch recent stage results and rider stats to spot sudden performance drop-offs in the race\n` +
+        `3. Fetch the upcoming stage calendar to assess remaining workload\n` +
+        `4. For each rider on my team, use the FirstCycling tools to check their recent results — ` +
+        `look for: DNFs or withdrawals in recent races before the Tour (possible lingering injury), ` +
+        `unusually low finishing positions in recent races that don't match their career baseline, ` +
+        `a sudden shift to support/domestique roles at their team, or a pattern of abandoning Grand Tours. ` +
+        `Cross-reference FirstCycling results with their in-race stage rankings to assess whether ` +
+        `any drop-off is a one-stage blip or part of a broader deterioration.\n\n` +
+        `Rate each rider's risk level (low/medium/high) based on the combined fantasy + FirstCycling signal. ` +
+        `For high-risk riders, recommend a contingency replacement and verify the replacement's ` +
+        `FirstCycling form is actually good before suggesting them.`
       );
 
     case "close_gap_on_rival": {
@@ -898,14 +940,19 @@ function buildPromptText(name: string, args: Args): string {
       return (
         `I need to close the points gap on "${rivalName}" in my fantasy league. Help me plan a targeted strategy.\n\n` +
         `Use the available tools to:\n` +
-        `1. Fetch the league standings to see the current gap\n` +
-        `2. Fetch my team and — if possible — look up the rival's publicly visible team\n` +
+        `1. Fetch the league standings to see the current gap from the TdF Fantasy API\n` +
+        `2. Fetch my team and — if possible — look up "${rivalName}"'s publicly visible team\n` +
         `3. Fetch the remaining stage calendar\n` +
-        `4. Fetch rider stats and top transactions\n\n` +
-        `Analyse: where is "${rivalName}" likely earning their points? Which riders do they have that I don't? ` +
-        `Identify the stages where I can outscore them and recommend specific transfers ` +
-        `that would swing the points differential in my favour. ` +
-        `Quantify the realistic points swing if the plan works.`
+        `4. Fetch rider stats and top transactions\n` +
+        `5. For both my team and ${rivalName}'s team, use the FirstCycling tools to assess each rider's ` +
+        `upcoming stage suitability — look at terrain-specific performance history and recent form. ` +
+        `Specifically: which of ${rivalName}'s riders are likely to score big in remaining stages ` +
+        `(FirstCycling shows strong results on that terrain), and which of my riders are likely to ` +
+        `outscore their equivalents? Identify asymmetric opportunities — stages where my riders have ` +
+        `better FirstCycling credentials than ${rivalName}'s riders on that terrain type.\n\n` +
+        `Recommend specific transfers that maximise my points swing versus ${rivalName}, ` +
+        `grounded in FirstCycling terrain data for the remaining stages. ` +
+        `Quantify the realistic points differential swing if the plan works.`
       );
     }
 
@@ -917,13 +964,18 @@ function buildPromptText(name: string, args: Args): string {
       return (
         `Build me a competitive TdF Fantasy team featuring as many ${nationality} riders as possible, within a ${budget}-credit budget.\n\n` +
         `Use the available tools to:\n` +
-        `1. Fetch the full rider list and filter for ${nationality} riders\n` +
-        `2. Fetch the stage calendar to identify stages that suit ${nationality} riders' typical strengths\n` +
-        `3. Build the strongest 8-rider team within ${budget} credits that maximises ${nationality} representation without sacrificing competitiveness\n\n` +
-        `Show the final team with each rider's price and role. ` +
+        `1. Fetch the full rider list from the TdF Fantasy API and filter for ${nationality} riders\n` +
+        `2. Fetch the stage calendar to identify stages that suit their typical strengths\n` +
+        `3. For each ${nationality} rider in the fantasy game, use the FirstCycling tools to pull their ` +
+        `palmares and recent results — rank them by actual race pedigree, not just fantasy price. ` +
+        `Look for: Grand Tour stage wins, strong recent results on terrain matching the upcoming stages, ` +
+        `and current season form. This FirstCycling ranking is the basis for selecting the best ${nationality} riders.\n` +
+        `4. Build the strongest 8-rider team within ${budget} credits that maximises ${nationality} ` +
+        `representation, using the FirstCycling-ranked order to choose between candidates\n\n` +
+        `Show the final team with each rider's price, FirstCycling palmares highlight, and role. ` +
         `If fitting 8 ${nationality} riders within budget is impossible, show the best compromise ` +
-        `(max nationality count + strongest non-nationality fills). ` +
-        `Note any ${nationality} riders who are exceptional value picks regardless of nationality preference.`
+        `and use FirstCycling data to justify which non-nationality riders fill the gaps. ` +
+        `Flag any ${nationality} hidden gems whose FirstCycling form outpaces their fantasy price.`
       );
     }
 
@@ -948,13 +1000,20 @@ function buildPromptText(name: string, args: Args): string {
       return (
         `Find TdF Fantasy riders with a similar racing profile to ${favoriteRider}.\n\n` +
         `Use the available tools to:\n` +
-        `1. Fetch rider stats and look up ${favoriteRider}'s position type, price, and scoring history\n` +
-        `2. Fetch the stage calendar to see what types of stages reward riders like ${favoriteRider}\n` +
-        `3. Identify 5–8 riders with a comparable profile — same position type, similar price bracket, ` +
-        `similar stage-win potential or GC threat level\n\n` +
-        `For each comparable rider: name, team, price, position, what they have in common with ${favoriteRider}, ` +
-        `and any key differences. Rank them by expected points return for the remaining stages. ` +
-        `Flag anyone who's better value than ${favoriteRider} at a lower price.`
+        `1. Use the FirstCycling tools to look up ${favoriteRider}'s profile — career specialty, ` +
+        `palmares (what race types they win), terrain strengths, and recent form. ` +
+        `Build a concrete profile: e.g. "solo attacker on long mountain stages, ` +
+        `wins on summit finishes, also dangerous in TTs, recent wins at [races]".\n` +
+        `2. Fetch the full rider list from the TdF Fantasy API with prices and positions\n` +
+        `3. Fetch the stage calendar to see which terrain types dominate the remaining race\n` +
+        `4. For the most promising candidates from the fantasy list, use FirstCycling to look up ` +
+        `their profiles and palmares — find riders whose career specialty, terrain wins, and ` +
+        `race-winning patterns most closely match ${favoriteRider}'s FirstCycling profile. ` +
+        `Prioritise riders who win in the same conditions, not just riders in the same position category.\n\n` +
+        `Present 5–8 similar riders, ranked by profile similarity and upcoming stage fit. ` +
+        `For each: name, price, a summary of their FirstCycling profile vs ${favoriteRider}'s, ` +
+        `key similarities and differences, and value verdict. ` +
+        `Flag anyone who is a better value pick than ${favoriteRider} at a lower price.`
       );
     }
 
@@ -984,12 +1043,16 @@ function buildPromptText(name: string, args: Args): string {
         `Scout all ${nationality} riders in the TdF Fantasy game priced at ${maxPrice} credits or less. ` +
         `Which ones are worth picking up?\n\n` +
         `Use the available tools to:\n` +
-        `1. Fetch all riders and filter for ${nationality} nationality at or under ${maxPrice} credits\n` +
-        `2. Fetch the stage calendar to assess how many scoring opportunities each has\n` +
-        `3. Rank them by points-per-credit potential for the remaining race\n\n` +
-        `For each worthwhile pick: name, team, price, position, typical strengths, ` +
-        `and which specific upcoming stages they should target. ` +
-        `Flag any hidden gems — ${nationality} riders who are underpriced relative to their potential.`
+        `1. Fetch all riders from the TdF Fantasy API and filter for ${nationality} nationality at or under ${maxPrice} credits\n` +
+        `2. Fetch the stage calendar to assess how many scoring opportunities each rider has\n` +
+        `3. For each ${nationality} rider on the shortlist, use the FirstCycling tools to pull their ` +
+        `palmares and recent results — score each rider by: number of wins or podiums in the last 12 months, ` +
+        `terrain specialty vs upcoming stage types, and Grand Tour stage-win history. ` +
+        `This FirstCycling data is the primary ranking signal — fantasy price alone is not enough.\n` +
+        `4. Rank the ${nationality} picks by FirstCycling-weighted points-per-credit potential\n\n` +
+        `For each worthwhile pick: name, price, FirstCycling palmares highlight (best recent wins or results), ` +
+        `terrain fit for upcoming stages, and a buy/watch/skip verdict. ` +
+        `Flag any hidden gems — ${nationality} riders whose FirstCycling form clearly outpaces their fantasy price.`
       );
     }
 
