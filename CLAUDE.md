@@ -63,7 +63,7 @@ Key dependency: `@modelcontextprotocol/sdk` (requires Node ≥ 18).
 }
 ```
 
-If using nvm, replace `node` with the full path, e.g. `~/.nvm/versions/node/v18.20.8/bin/node`.
+Run `nvm use` in the project directory first (picks up `.nvmrc` → Node 24 LTS), then `node` resolves correctly.
 
 ---
 
