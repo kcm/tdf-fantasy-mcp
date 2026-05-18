@@ -1,5 +1,17 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { apiGet, apiPost } from "./api.js";
+import {
+  scoreTeamForStage,
+  DEFAULT_SCORING_TABLE,
+  type StageRiderResult,
+} from "./scoring.js";
+import {
+  rankRidersByValue,
+  suggestTransfers,
+  type RiderSnapshot,
+  type TeamConstraints,
+} from "./optimization.js";
+import { type StageType } from "./scoring.js";
 
 export const TOOLS: Tool[] = [
   {
@@ -249,6 +261,107 @@ export const TOOLS: Tool[] = [
       properties: {},
     },
   },
+
+  // ── Scoring & optimisation (pure — no API call required) ───────────────────
+
+  {
+    name: "calculate_stage_score",
+    description:
+      "Calculate the fantasy points earned by a team for a single stage, given each rider's result. Applies the captain multiplier to the designated captain. No authentication required — pure calculation.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        team_results: {
+          type: "array",
+          description:
+            "Array of stage results, one per team rider. Each entry needs: riderId (number), finishPosition (number, 1-based, omit for DNF), bonusSprints (array of 1-based sprint positions), komResults (array of {category, position}), jerseys (array of 'yellow'|'green'|'polka_dot'|'white').",
+          items: { type: "object" },
+        },
+        capitaine_id: {
+          type: "number",
+          description: "Rider ID of the team captain (gets a 1.2× score multiplier).",
+        },
+      },
+      required: ["team_results", "capitaine_id"],
+    },
+  },
+
+  {
+    name: "rank_riders_for_stages",
+    description:
+      "Rank a set of riders by expected fantasy value (estimated points per million of price) for the given upcoming stage types. Use this to identify the best pickups before a transfer window. No authentication required — pure calculation.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        riders: {
+          type: "array",
+          description:
+            "Riders to rank. Each needs: id (number), positionId (43=Leaders, 44=Polyvalents, 45=Grimpeurs, 46=Sprinteurs), clubId (number), price (number, in millions). Optionally totalPoints (number) for in-season use.",
+          items: { type: "object" },
+        },
+        stage_types: {
+          type: "array",
+          items: {
+            type: "string",
+            enum: ["flat", "hilly", "mountain_finish", "individual_tt", "team_tt"],
+          },
+          description: "Stage types for the upcoming window being optimised.",
+        },
+        max_price: {
+          type: "number",
+          description: "Optional upper price filter in millions.",
+        },
+      },
+      required: ["riders", "stage_types"],
+    },
+  },
+
+  {
+    name: "suggest_transfers",
+    description:
+      "Given the current team and a pool of available riders, suggest the best single-swap transfers for the upcoming stages. Returns up to exchangesAvailable×3 options sorted by expected score gain. No authentication required — pure calculation.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        current_team: {
+          type: "array",
+          description:
+            "Current team roster. Each rider needs: id, positionId, clubId, price, optionally totalPoints.",
+          items: { type: "object" },
+        },
+        available_riders: {
+          type: "array",
+          description:
+            "Pool of riders that can be picked up. Same shape as current_team.",
+          items: { type: "object" },
+        },
+        constraints: {
+          type: "object",
+          description:
+            "Team constraints: budget (remaining millions), maxRidersPerClub (typically 3), totalRiders (typically 8).",
+        },
+        stage_types: {
+          type: "array",
+          items: {
+            type: "string",
+            enum: ["flat", "hilly", "mountain_finish", "individual_tt", "team_tt"],
+          },
+          description: "Upcoming stage types to optimise for.",
+        },
+        exchanges_available: {
+          type: "number",
+          description: "Number of transfers remaining in the current window.",
+        },
+      },
+      required: [
+        "current_team",
+        "available_riders",
+        "constraints",
+        "stage_types",
+        "exchanges_available",
+      ],
+    },
+  },
 ];
 
 export async function handleTool(
@@ -345,6 +458,35 @@ export async function handleTool(
 
     case "get_user_credits":
       return apiGet("/private/usercredits", true);
+
+    case "calculate_stage_score": {
+      const teamResults = args.team_results as StageRiderResult[];
+      const capitaineId = args.capitaine_id as number;
+      return scoreTeamForStage(teamResults, capitaineId, DEFAULT_SCORING_TABLE);
+    }
+
+    case "rank_riders_for_stages": {
+      const riders = args.riders as RiderSnapshot[];
+      const stageTypes = args.stage_types as StageType[];
+      const maxPrice = args.max_price as number | undefined;
+      return rankRidersByValue(riders, stageTypes, DEFAULT_SCORING_TABLE, maxPrice);
+    }
+
+    case "suggest_transfers": {
+      const currentTeam = args.current_team as RiderSnapshot[];
+      const availableRiders = args.available_riders as RiderSnapshot[];
+      const constraints = args.constraints as TeamConstraints;
+      const stageTypes = args.stage_types as StageType[];
+      const exchanges = args.exchanges_available as number;
+      return suggestTransfers(
+        currentTeam,
+        availableRiders,
+        constraints,
+        stageTypes,
+        exchanges,
+        DEFAULT_SCORING_TABLE
+      );
+    }
 
     default:
       throw new Error(`Unknown tool: ${name}`);

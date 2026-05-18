@@ -7,6 +7,7 @@
     "build": "tsc",
     "dev": "ts-node src/index.ts",
     "start": "node dist/index.js",
+    "test": "npm run build && node --test dist/__tests__/scoring.test.js dist/__tests__/optimization.test.js",
     "prepublishOnly": "npm run build"
   },
   "bin": {
