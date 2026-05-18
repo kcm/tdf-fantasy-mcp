@@ -10,7 +10,3 @@ tsconfig.json
 # Claude/dev docs
 CLAUDE.md
 INDEX.md
-
-# Misc
-*.log
-*.tgz
