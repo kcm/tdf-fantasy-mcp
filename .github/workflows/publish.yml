@@ -18,7 +18,10 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-          registry-url: https://registry.npmjs.org
+          # No registry-url — omitting it prevents setup-node from writing an
+          # .npmrc token entry that would shadow npm's OIDC exchange. With
+          # id-token: write above, npm detects the GitHub Actions environment
+          # and exchanges the OIDC token with the registry automatically.
 
       - run: npm ci
 
@@ -27,5 +30,3 @@ jobs:
 
       - name: Publish
         run: npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
